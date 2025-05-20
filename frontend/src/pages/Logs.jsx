@@ -31,47 +31,58 @@ const Logs = () => {
   }, [fetchLogs]);
 
   return (
-    <div className="container mx-auto p-6 min-h-screen">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Activity Logs</h1>
-      <div className="mb-6">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-semibold text-gray-800">Activity Logs</h1>
+        </div>
+
         <input
           type="text"
-          placeholder="Search by action or user ID"
+          placeholder="Search by action or user ID..."
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-black outline-none"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-1/2 px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
         />
+
+        {error && (
+          <div className="bg-red-100 text-red-700 p-3 rounded-lg border border-red-200">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {logs.length > 0 ? (
+              logs.map((log) => (
+                <div
+                  key={log.id}
+                  className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col justify-between"
+                >
+                  <div className="space-y-1 mb-3">
+                    <p className="text-xs text-gray-500">ID: {log.id}</p>
+                    <h2 className="text-lg font-bold text-gray-800">Action: {log.action}</h2>
+                    <p className="text-sm text-gray-600">User ID: {log.user_id}</p>
+                    <p className="text-sm text-gray-600">
+                      Timestamp: {new Date(log.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center text-gray-500">
+                No logs found.
+              </div>
+            )}
+          </div>
+        )}
+
+        <Pagination meta={meta} setPage={setPage} />
       </div>
-      {error && <p className="text-red-600 mb-4 text-sm">{error}</p>}
-      {loading ? (
-        <div className="flex justify-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm overflow-x-auto border border-gray-100">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50 text-gray-700">
-                <th className="p-4 text-left text-sm font-semibold">ID</th>
-                <th className="p-4 text-left text-sm font-semibold">User ID</th>
-                <th className="p-4 text-left text-sm font-semibold">Action</th>
-                <th className="p-4 text-left text-sm font-semibold">Timestamp</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="p-4 text-sm text-gray-700">{log.id}</td>
-                  <td className="p-4 text-sm text-gray-700">{log.user_id}</td>
-                  <td className="p-4 text-sm text-gray-700">{log.action}</td>
-                  <td className="p-4 text-sm text-gray-700">{new Date(log.created_at).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <Pagination meta={meta} setPage={setPage} />
     </div>
   );
 };

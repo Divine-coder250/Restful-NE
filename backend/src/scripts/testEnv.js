@@ -1,4 +1,4 @@
-const result = require('dotenv').config({path:'C:/Users/linca/OneDrive/Documents/NE/restful/vehicle_pms_with_no_tailwind_conflicts_npm/backend/.env'});
+const result = require('dotenv').config({path:'../../.env'});
 if(result.error){
     console.error('Error loading .env file:', result.error);
 } else {
