@@ -27,10 +27,20 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - vehicle_id
+ *               - entry_time
+ *               - exit_time
  *             properties:
  *               vehicle_id:
  *                 type: integer
  *                 example: 1
+ *               entry_time:
+ *                 type: string
+ *                 format: date-time
+ *                 example: 2025-05-20T14:00:00
+ *               exit_time:
+ *                 type: string
+ *                 format: date-time
+ *                 example: 2025-05-20T17:00:00
  *     responses:
  *       201:
  *         description: Slot request created successfully
@@ -44,6 +54,11 @@ const router = express.Router();
  *                 vehicle_id: { type: integer, example: 1 }
  *                 request_status: { type: string, example: pending }
  *                 requested_at: { type: string, format: date-time }
+ *                 entry_time: { type: string, format: date-time, example: 2025-05-20T14:00:00}
+ *                 exit_time: { type: string, format: date-time, example: 2025-05-20T17:00:00 }
+ *                 amount: { type: number, example: 3000 }
+ *       400:
+ *         description: Invalid input (missing fields, invalid dates, or exit time not after entry time)
  *       401:
  *         description: Unauthorized, invalid or missing token
  *       404:
@@ -100,6 +115,9 @@ router.post('/', authenticate, createRequest);
  *                       slot_number: { type: string, nullable: true }
  *                       requested_at: { type: string, format: date-time }
  *                       approved_at: { type: string, format: date-time, nullable: true }
+ *                       entry_time: { type: string, format: date-time, example: 2025-05-20T14:00:00 }
+ *                       exit_time: { type: string, format: date-time, example: 2025-05-20T17:00:00 }
+ *                       amount: { type: number, example: 3000 }
  *                       plate_number: { type: string, example: ABC123 }
  *                       vehicle_type: { type: string, example: car }
  *                 meta:
@@ -139,10 +157,20 @@ router.get('/', authenticate, getRequests);
  *             type: object
  *             required:
  *               - vehicle_id
+ *               - entry_time
+ *               - exit_time
  *             properties:
  *               vehicle_id:
  *                 type: integer
  *                 example: 2
+ *               entry_time:
+ *                 type: string
+ *                 format: date-time
+ *                 example: 2025-05-20T14:00:00
+ *               exit_time:
+ *                 type: string
+ *                 format: date-time
+ *                 example: 2025-05-20T17:00:00
  *     responses:
  *       200:
  *         description: Slot request updated successfully
@@ -156,6 +184,11 @@ router.get('/', authenticate, getRequests);
  *                 vehicle_id: { type: integer, example: 2 }
  *                 request_status: { type: string, example: pending }
  *                 requested_at: { type: string, format: date-time }
+ *                 entry_time: { type: string, format: date-time, example: 2025-05-20T14:00:00 }
+ *                 exit_time: { type: string, format: date-time, example: 2025-05-20T17:00:00 }
+ *                 amount: { type: number, example: 3000 }
+ *       400:
+ *         description: Invalid input (missing fields, invalid dates, or exit time not after entry time)
  *       401:
  *         description: Unauthorized, invalid or missing token
  *       404:
@@ -221,7 +254,7 @@ router.delete('/:id', authenticate, deleteRequest);
  *             schema:
  *               type: object
  *               properties:
- *                 message: { type: string, example: Request approved }
+ *                 message: { type: string, example: Request approved. Payment of 3000 processed successfully. You may now enter the parking area. }
  *                 slot:
  *                   type: object
  *                   properties:
@@ -231,7 +264,9 @@ router.delete('/:id', authenticate, deleteRequest);
  *                     vehicle_type: { type: string, example: car }
  *                     status: { type: string, example: unavailable }
  *                     location: { type: string, example: north }
- *                 emailStatus: { type: string, example: sent }
+ *                 amount: { type: number, example: 3000 }
+ *                 approvalEmailStatus: { type: string, example: sent }
+ *                 paymentEmailStatus: { type: string, example: sent }
  *       400:
  *         description: No compatible slots available
  *       401:
@@ -289,6 +324,9 @@ router.put('/:id/approve', authenticate, isAdmin, approveRequest);
  *                     vehicle_id: { type: integer, example: 1 }
  *                     request_status: { type: string, example: rejected }
  *                     requested_at: { type: string, format: date-time }
+ *                     entry_time: { type: string, format: date-time, example: 2025-05-20T14:00:00 }
+ *                     exit_time: { type: string, format: date-time, example: 2025-05-20T17:00:00 }
+ *                     amount: { type: number, example: 3000 }
  *                 emailStatus: { type: string, example: sent }
  *       400:
  *         description: Rejection reason is required

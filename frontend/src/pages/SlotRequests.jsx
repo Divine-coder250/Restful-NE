@@ -36,7 +36,10 @@ const SlotRequests = () => {
   const handleApprove = async (id) => {
     try {
       const response = await approveRequest(id);
-      alert(`Request approved. Slot: ${response.data.slot?.slot_number || 'N/A'}. Email: ${response.data.emailStatus}`);
+      const slotNumber = response.data.slot?.slot_number || 'N/A';
+      const approvalStatus = response.data.approvalEmailStatus || 'failed';
+      const paymentStatus = response.data.paymentEmailStatus || 'failed';
+      alert(`Request approved. Slot: ${slotNumber}. Approval Email: ${approvalStatus}, Payment Email: ${paymentStatus}`);
       fetchRequests();
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to approve request');
@@ -64,13 +67,13 @@ const SlotRequests = () => {
     
     switch (status.toLowerCase()) {
       case 'approved':
-        return <span className={`${baseClasses} bg-green-100 text-green-800`}>Approved</span>;
+        return <span className={`${baseClasses} bg-green-700 text-white`}>Approved</span>;
       case 'rejected':
-        return <span className={`${baseClasses} bg-red-100 text-red-800`}>Rejected</span>;
+        return <span className={`${baseClasses} bg-red-700 text-white`}>Rejected</span>;
       case 'pending':
-        return <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>Pending</span>;
+        return <span className={`${baseClasses} bg-yellow-600 text-white`}>Pending</span>;
       default:
-        return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>{status}</span>;
+        return <span className={`${baseClasses} bg-gray-600 text-white`}>{status}</span>;
     }
   };
 
@@ -83,47 +86,50 @@ const SlotRequests = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 min-h-screen">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Slot Requests</h1>
-      <div className="mb-6">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-semibold text-gray-800">Slot Requests</h1>
+        </div>
+
         <input
           type="text"
-          placeholder="Search by plate number or status"
+          placeholder="Search by plate number or status..."
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-black outline-none"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-1/2 px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
         />
-      </div>
-      {error && <p className="text-red-600 mb-4 text-sm">{error}</p>}
-      {loading ? (
-        <div className="flex justify-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm overflow-x-auto border border-gray-100">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50 text-gray-700">
-                <th className="p-4 text-left text-sm font-semibold">ID</th>
-                <th className="p-4 text-left text-sm font-semibold">Plate Number</th>
-                <th className="p-4 text-left text-sm font-semibold">Vehicle Type</th>
-                <th className="p-4 text-left text-sm font-semibold">Status</th>
-                <th className="p-4 text-left text-sm font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((req) => (
-                <tr key={req.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="p-4 text-sm text-gray-700">{req.id}</td>
-                  <td className="p-4 text-sm text-gray-700">{req.plate_number}</td>
-                  <td className="p-4 text-sm text-gray-700 capitalize">{req.vehicle_type}</td>
-                  <td className="p-4">{getStatusBadge(req.request_status)}</td>
-                  <td className="p-4">
+
+        {error && (
+          <div className="bg-red-100 text-red-700 p-3 rounded-lg border border-red-200">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {requests.length > 0 ? (
+              requests.map((req) => (
+                <div
+                  key={req.id}
+                  className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col justify-between"
+                >
+                  <div className="space-y-1 mb-3">
+                    <p className="text-xs text-gray-500">ID: {req.id}</p>
+                    <h2 className="text-lg font-bold text-gray-800">Plate: {req.plate_number}</h2>
+                    <p className="text-sm text-gray-600">Type: {req.vehicle_type}</p>
+                    <div className="mt-2">{getStatusBadge(req.request_status)}</div>
+                  </div>
+                  <div className="flex justify-end gap-2 text-sm">
                     {req.request_status.toLowerCase() === 'pending' ? (
-                      <div className="flex gap-2">
+                      <>
                         <button
                           onClick={() => handleApprove(req.id)}
-                          className="px-3 py-1.5 text-sm font-medium text-white bg-black/70 rounded-full hover:bg-blue-700 transition-colors"
+                          className="px-3 py-1.5 text-sm font-medium text-white bg-black/70 rounded-full hover:bg-black transition-colors"
                         >
                           Approve
                         </button>
@@ -133,7 +139,7 @@ const SlotRequests = () => {
                         >
                           Reject
                         </button>
-                      </div>
+                      </>
                     ) : (
                       <button
                         onClick={() => handleViewDetails(req)}
@@ -142,95 +148,99 @@ const SlotRequests = () => {
                         View Details
                       </button>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center text-gray-500">
+                No slot requests found.
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* Reject Request Modal */}
-      {selectedRequestId && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Reject Request #{selectedRequestId}
-            </h2>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Enter reason for rejection"
-              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all mb-4"
-              rows="4"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setRejectReason('');
-                  setSelectedRequestId(null);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReject}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-full hover:bg-red-700 transition-colors"
-              >
-                Confirm Rejection
-              </button>
+        {/* Reject Request Modal */}
+        {selectedRequestId && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Reject Request #{selectedRequestId}
+              </h2>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Enter reason for rejection"
+                className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-all mb-4"
+                rows="4"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setRejectReason('');
+                    setSelectedRequestId(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReject}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-full hover:bg-red-700 transition-colors"
+                >
+                  Confirm Rejection
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* View Details Modal */}
-      {selectedRequestDetails && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Request Details #{selectedRequestDetails.id}
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <p className="font-medium text-gray-700">Plate Number:</p>
-                <p className="text-gray-600">{selectedRequestDetails.plate_number}</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-700">Vehicle Type:</p>
-                <p className="text-gray-600 capitalize">{selectedRequestDetails.vehicle_type}</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-700">Status:</p>
-                {getStatusBadge(selectedRequestDetails.request_status)}
-              </div>
-              {selectedRequestDetails.request_status.toLowerCase() === 'rejected' && selectedRequestDetails.rejection_reason && (
+        {/* View Details Modal */}
+        {selectedRequestDetails && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Request Details #{selectedRequestDetails.id}
+              </h2>
+              <div className="space-y-4">
                 <div>
-                  <p className="font-medium text-gray-700">Rejection Reason:</p>
-                  <p className="text-gray-600">{selectedRequestDetails.rejection_reason}</p>
+                  <p className="font-medium text-gray-700">Plate Number:</p>
+                  <p className="text-gray-600">{selectedRequestDetails.plate_number}</p>
                 </div>
-              )}
-              {selectedRequestDetails.request_status.toLowerCase() === 'approved' && selectedRequestDetails.slot && (
                 <div>
-                  <p className="font-medium text-gray-700">Assigned Slot:</p>
-                  <p className="text-gray-600">{selectedRequestDetails.slot.slot_number}</p>
+                  <p className="font-medium text-gray-700">Vehicle Type:</p>
+                  <p className="text-gray-600 capitalize">{selectedRequestDetails.vehicle_type}</p>
                 </div>
-              )}
-            </div>
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={closeDetailsModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-              >
-                Close
-              </button>
+                <div>
+                  <p className="font-medium text-gray-700">Status:</p>
+                  {getStatusBadge(selectedRequestDetails.request_status)}
+                </div>
+                {selectedRequestDetails.request_status.toLowerCase() === 'rejected' && selectedRequestDetails.rejection_reason && (
+                  <div>
+                    <p className="font-medium text-gray-700">Rejection Reason:</p>
+                    <p className="text-gray-600">{selectedRequestDetails.rejection_reason}</p>
+                  </div>
+                )}
+                {selectedRequestDetails.request_status.toLowerCase() === 'approved' && selectedRequestDetails.slot && (
+                  <div>
+                    <p className="font-medium text-gray-700">Assigned Slot:</p>
+                    <p className="text-gray-600">{selectedRequestDetails.slot.slot_number}</p>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={closeDetailsModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <Pagination meta={meta} setPage={setPage} />
+        <Pagination meta={meta} setPage={setPage} />
+      </div>
     </div>
   );
 };
